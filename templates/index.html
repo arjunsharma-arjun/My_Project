@@ -1,0 +1,93 @@
+<!-- File: templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Denoising App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+    }
+    input, select, button {
+      margin: 10px;
+      padding: 10px;
+    }
+    img {
+      max-width: 300px;
+      margin-top: 20px;
+    }
+    #loader {
+      display: none;
+      font-weight: bold;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧼 Image Denoising App</h1>
+
+  <form id="upload-form">
+    <input type="file" name="file" id="file" required accept="image/*"><br>
+    <label for="method">Denoise Method:</label>
+    <select name="method" id="method">
+      <option value="gaussian">Gaussian Blur</option>
+      <option value="median">Median Blur</option>
+      <option value="bilateral">Bilateral Filter</option>
+      <option value="nlm">Non-local Means</option>
+    </select><br>
+    <label for="strength">Strength:</label>
+    <input type="number" name="strength" id="strength" min="1" max="25" value="5"><br>
+    <button type="submit">🧽 Denoise Image</button>
+  </form>
+
+  <div id="loader">⏳ Processing image...</div>
+
+  <div id="result">
+    <h3>Result:</h3>
+    <img id="output" src="#" alt="Denoised Image" style="display: none;">
+  </div>
+
+  <script>
+    const form = document.getElementById('upload-form');
+    const loader = document.getElementById('loader');
+    const output = document.getElementById('output');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const file = document.getElementById('file').files[0];
+      const method = document.getElementById('method').value;
+      const strength = document.getElementById('strength').value;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('method', method);
+      formData.append('strength', strength);
+
+      loader.style.display = 'block';
+      output.style.display = 'none';
+
+      const res = await fetch('/api/denoise', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      loader.style.display = 'none';
+
+      if (data.denoised_image) {
+        output.src = 'data:image/png;base64,' + data.denoised_image;
+        output.style.display = 'block';
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    });
+  </script>
+</body>
+</html>
